@@ -40,9 +40,10 @@ cc_library_with_stable_tflite_abi(
     name = "utils",
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
-    copts = tflite_copts(),
+    copts = tflite_copts() + ["-fexceptions"],
     non_stable_abi_deps = [
         "//tensorflow/lite/delegates/nnapi:nnapi_delegate",
+        "//tensorflow/lite/delegates/openvino:openvino_delegate",
     ] + select({
         "//tensorflow:ios": [
             "//tensorflow/lite/delegates/coreml:coreml_delegate",

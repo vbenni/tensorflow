@@ -41,9 +41,10 @@ cc_library_with_tflite(
 # A convenient library for all inference execution providers.
 cc_library_with_tflite(
     name = "tflite_execution_providers",
-    copts = tflite_copts(),
+    copts = tflite_copts() + ["-fexceptions"],
     tflite_deps = [
         ":xnnpack_delegate_provider",
+	":openvino_delegate_provider",
         ":delegate_provider_lib",
     ],
     deps = [
@@ -163,7 +164,7 @@ cc_library(
 cc_library_with_tflite(
     name = "xnnpack_delegate_provider",
     srcs = ["xnnpack_delegate_provider.cc"],
-    copts = tflite_copts(),
+    copts = tflite_copts() + ["-fexceptions"],
     linkstatic = True,
     tflite_deps = [
         ":delegate_provider_hdr",
@@ -172,6 +173,21 @@ cc_library_with_tflite(
     visibility = ["//visibility:public"],
     alwayslink = 1,
 )
+
+cc_library(
+    name = "openvino_delegate_provider",
+    srcs = ["openvino_delegate_provider.cc"],
+    copts = tflite_copts() + ["-fexceptions"],
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":delegate_provider_hdr",
+       "//tensorflow/lite/delegates/openvino:openvino_delegate",
+        "//tensorflow/lite/tools/evaluation:utils",
+    ],
+    alwayslink = 1,
+)
+
 
 cc_library(
     name = "external_delegate_provider",
