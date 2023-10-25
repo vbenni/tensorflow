@@ -48,10 +48,8 @@ cc_library_with_tflite(
         ":delegate_provider_lib",
     ],
     deps = [
-        ":coreml_delegate_provider",
         ":default_execution_provider",
         ":external_delegate_provider",
-        ":gpu_delegate_provider",
         ":hexagon_delegate_provider",
         ":nnapi_delegate_provider",
         "//tensorflow/lite/tools/delegates/experimental/stable_delegate:delegate_provider",
@@ -87,11 +85,6 @@ cc_library(
         ":delegate_provider_hdr",
         "//tensorflow/lite/tools/evaluation:utils",
     ] + select({
-        "//tensorflow/lite/delegates/gpu:supports_gpu_delegate": [
-            "//tensorflow/lite/delegates/gpu:delegate",
-        ],
-        "//conditions:default": [],
-    }) + select({
         "//tensorflow:ios": [
             "//tensorflow/lite/delegates/gpu:metal_delegate",
         ],
@@ -106,7 +99,7 @@ cc_library(
 cc_library(
     name = "nnapi_delegate_provider",
     srcs = ["nnapi_delegate_provider.cc"],
-    copts = common_copts,
+    copts = common_copts + ["-fexceptions"],
     deps = [
         ":delegate_provider_hdr",
         "//tensorflow/lite/delegates/nnapi:nnapi_delegate",
@@ -121,7 +114,7 @@ cc_library(
 cc_library(
     name = "hexagon_delegate_provider",
     srcs = ["hexagon_delegate_provider.cc"],
-    copts = common_copts,
+    copts = common_copts + ["-fexceptions"],
     deps = [
         ":delegate_provider_hdr",
         "//tensorflow/lite/tools/evaluation:utils",
