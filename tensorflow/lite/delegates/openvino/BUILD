@@ -19,7 +19,6 @@ cc_library(
         "manual",
         "nobuilder",
     ],
-    copts = tflite_copts() + ["-fexceptions"],
     linkstatic = True,
     deps = [
         ":openvino_delegate_kernel",
