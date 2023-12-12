@@ -3,12 +3,18 @@
 #include <vector>
 #include <iostream>
 
-#include "openvino/runtime/core.hpp"
+#include <openvino/openvino.hpp>
+#include <openvino/pass/manager.hpp>
+#include <openvino/pass/serialize.hpp>
+#include <openvino/runtime/core.hpp>
 #include "openvino_graph_builder.h"
+namespace tflite {
+namespace openvinodelegate {
 class OpenVINODelegateManager {
  public:
   OpenVINODelegateManager(std::string_view plugins_path)
-      : openvino_delegate_core(ov::Core(std::string(plugins_path))) {
+      : openvino_delegate_core(ov::Core()) {
+    TFLITE_LOG(INFO) << "inside openvino delegate manager init \n";
     plugins_location = plugins_path;
   }
   TfLiteStatus openvino_delegate_init() {
@@ -34,4 +40,6 @@ class OpenVINODelegateManager {
   ov::CompiledModel compiled_model;
   std::string deviceStr = "CPU";
 };
+}  // namespace openvinodelegate
+}  // namespace tflite
 #endif  // TENSORFLOW_LITE_DELEGATES_OPENVINO_DELEGATE_KERNEL_H_

@@ -19,13 +19,14 @@ cc_library(
         "manual",
         "nobuilder",
     ],
-    linkstatic = True,
+#    linkstatic = True,
     deps = [
-        "//tensorflow/lite:kernel_api",
-        "//tensorflow/lite/tools:logging",
         "//tensorflow/lite/c:common",
         "//tensorflow/lite/core/api",
+        "//tensorflow/lite/delegates/openvino/operations:operation_builder",
+        "//tensorflow/lite:kernel_api",
         "//tensorflow/lite/kernels:kernel_util",
+        "//tensorflow/lite/tools:logging",
         "@intel_openvino//:openvino",
     ],
 )
@@ -38,7 +39,7 @@ cc_library(
         "manual",
         "nobuilder",
     ],
-    linkstatic = True,
+#    linkstatic = True,
     deps = [
         ":openvino_graph_builder",
         "//tensorflow/lite:kernel_api",
@@ -58,7 +59,7 @@ cc_library(
         "manual",
         "nobuilder",
     ],
-    linkstatic = True,
+#    linkstatic = True,
     deps = [
         ":openvino_delegate_core",
         "//tensorflow/lite:kernel_api",
@@ -79,7 +80,7 @@ cc_library(
         "manual",
         "nobuilder",
     ],
-    linkstatic = True,
+#    linkstatic = True,
     deps = [
         ":openvino_delegate_kernel",
         "//tensorflow/lite:kernel_api",

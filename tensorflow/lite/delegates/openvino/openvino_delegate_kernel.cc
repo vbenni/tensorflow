@@ -30,13 +30,10 @@ TfLiteStatus OpenVINODelegateKernel::Init(TfLiteContext* context,
   }
 
   TfLiteStatus set_status =
-      ov_delegate_manager->setGraphInfofromTfLite(context, params);
+      ov_delegate_manager->createGraphfromTfLite(context, params);
   if (set_status != kTfLiteOk) {
     return set_status;
   }
-  // ngraphNodes = new NgraphNodes(inputs.size() +
-  // params->nodes_to_replace->size);
-
   // TODO: get device string from flags
 
   return kTfLiteOk;
