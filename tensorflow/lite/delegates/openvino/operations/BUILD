@@ -9,9 +9,11 @@ cc_library(
     name = "operation_builder",
     srcs = [
         "add.cc",
+	"conv2d.cc",
     ],
     hdrs = [
         "add.h",
+	"conv2d.h",
 	"operations_base.h",
 	"openvino_node_manager.h",
     ],

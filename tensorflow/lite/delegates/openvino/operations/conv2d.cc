@@ -4,11 +4,9 @@ namespace tflite {
 namespace openvinodelegate {
 
 std::shared_ptr<ov::Node> Conv2D::createNode() {
-	//TODO: filter tensor to update so it does not use tensors 
-  const TfLiteTensor& filter_tensor = tensors[node->inputs->data[1]];
-
 
   const TfLiteConvParams* conv2dParams = (TfLiteConvParams*) GetBuiltinData(); 
+  std::vector<int> filter_dims = GetDims(tensor_indices[1]);
   std::vector<size_t> strides;
   std::vector<std::ptrdiff_t> padding_begin, padding_end;
   std::vector<size_t> dilations;
@@ -16,8 +14,8 @@ std::shared_ptr<ov::Node> Conv2D::createNode() {
   int filter_size = 0;
   int padding_top, padding_bottom, padding_left, padding_right = 0;
 
-  if (filter_tensor.dims->size == 4) {
-    filter_size = filter_tensor.dims->data[1];
+  if (filter_dims.size() == 4) {
+    filter_size = filter_dims[1];
   } else {
     return nullptr;
   }
@@ -41,9 +39,9 @@ std::shared_ptr<ov::Node> Conv2D::createNode() {
   padding_end = {padding_bottom, padding_right};
   dilations = {(size_t)conv2dParams->dilation_height_factor,
                (size_t)conv2dParams->dilation_width_factor};
-  auto input_node = getInputNode(0);
-  auto filter_node = getInputNode(1);
-  auto bias_node = getInputNode(2);
+  auto input_node = getInputNode(tensor_indices[0]);
+  auto filter_node = getInputNode(tensor_indices[1]);
+  auto bias_node = getInputNode(tensor_indices[2]);
 
   auto convNode = std::make_shared<ov::opset8::Convolution>(
       input_node, filter_node, ov::Strides(strides),

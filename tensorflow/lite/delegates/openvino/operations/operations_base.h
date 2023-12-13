@@ -19,10 +19,12 @@ public:
 	tensor_indices_size = size;
         SetBuiltinData(builtin_data);
     }
+    void SetContext(const TfLiteContext* context) { context_ = context; }
     virtual std::shared_ptr<ov::Node> createNode() = 0;
     int* tensor_indices;
     int tensor_indices_size;
     std::shared_ptr<NodeManager> nodeManager;
+    const TfLiteContext* context_;
 
 protected:
 	//tflite runtime related info to be added in Model BUilder
@@ -56,6 +58,15 @@ protected:
             default:
                 return nullptr;
         }
+    }
+
+    std::vector<int> GetDims(int index) {
+        const TfLiteTensor t = context_->tensors[index];
+        std::vector<int> dims(t.dims->size);
+        for (int i = 0; i < t.dims->size; i++) {
+            dims[i] = t.dims->data[i];
+        }
+	return dims;
     }
 
 private:

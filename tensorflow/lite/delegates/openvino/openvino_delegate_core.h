@@ -14,7 +14,6 @@ class OpenVINODelegateManager {
  public:
   OpenVINODelegateManager(std::string_view plugins_path)
       : openvino_delegate_core(ov::Core()) {
-    TFLITE_LOG(INFO) << "inside openvino delegate manager init \n";
     plugins_location = plugins_path;
   }
   TfLiteStatus openvino_delegate_init() {

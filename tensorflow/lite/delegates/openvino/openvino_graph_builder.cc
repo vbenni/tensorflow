@@ -3,12 +3,12 @@
 namespace tflite {
 namespace openvinodelegate {
 
-TfLiteStatus OpenVINOGraphBuilder::createNodeFromTfLiteOp(int node_id, TfLiteRegistration* registration, TfLiteNode* node) {
-	//TODO: update index here
+TfLiteStatus OpenVINOGraphBuilder::createNodeFromTfLiteOp(int node_id, TfLiteRegistration* registration, TfLiteNode* node, TfLiteContext* context) {
     auto operationNode = createOpClass(node_id, registration);
     if( !operationNode )
         return kTfLiteError;
     operationNode->nodeManager = nodeManager; 
+    operationNode->SetContext(context);
     operationNode->UpdateNodeInfo(node->inputs->data, node->inputs->size, node->builtin_data);
     resultNode = operationNode->createNode();
     nodeManager->setOutputAtOperandIndex(node->outputs->data[0], resultNode);
@@ -20,9 +20,9 @@ std::shared_ptr<OperationBuilder> OpenVINOGraphBuilder::createOpClass(int operat
     case kTfLiteBuiltinAdd: {
       return std::make_shared<Add>(operationIndex);
     }
-//    case kTfLiteBuiltinConv2d: {
-//      return new Conv2d(operationIndex);
-//    }
+    case kTfLiteBuiltinConv2d: {
+      return std::make_shared<Conv2D>(operationIndex);
+    }
     default:
       return nullptr;
   }
