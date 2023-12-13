@@ -28,14 +28,12 @@ class OpenVINOGraphBuilder {
         ov::element::f32, ov::Shape(dims.begin(), dims.end()));
     if (input == NULL)
       TFLITE_LOG(INFO) << "addInputParams input node is null\n";
-    setOutputAtOperandIndex(index, input);
+    setNodeAtTensorIndex(index, input);
     inputParams.push_back(input);
   }
   // REVISIT: Decide on the data type of index passed in these calls
-  void setOutputAtOperandIndex(int index, ov::Output<ov::Node> output);
-  std::shared_ptr<ov::Node> getInterimNodefromTensor(int index);
-  std::shared_ptr<ov::Node> createNodefromTensor(const TfLiteTensor& tensor,
-                                         int tensor_index);
+  TfLiteStatus setNodeAtTensorIndex(int index, ov::Output<ov::Node> output);
+  std::shared_ptr<ov::Node> getOVNodefromTensorIndex(int index);
   std::shared_ptr<ov::Node> createConstNode(ov::element::Type elementType,
                                             ov::Shape shape, const void* data) {
     return std::make_shared<ov::opset8::Constant>(elementType, shape, data);
@@ -59,8 +57,30 @@ class OpenVINOGraphBuilder {
   std::vector<std::shared_ptr<ov::Node>> resultNodes = {};
   std::vector<std::shared_ptr<ov::opset3::Parameter>> inputParams;
 
+
+
  private:
   std::map<int, ov::Output<ov::Node>> outputAtOperandIndex;
   std::shared_ptr<ov::Node> resultNode;
+  enum ConversionType {
+        NHWC_NCHW,
+        NCHW_NHWC,
+        IHWO_OIHW,
+        OHWI_OIHW,
+        NHWC_CWHN,
+        CWHN_NHWC,
+        NHC_NCH,
+        NCH_NHC,
+        CNH_NHC,
+        NCH_HNC,
+        HNC_NCH,
+        NHC_CNH,
+        BTS_TBS,
+        NHCW_NHWC,
+        NC_CN
+    };
+    public : 
+      std::shared_ptr<ov::Node> transpose(ConversionType type,
+                                                    ov::Output<ov::Node> input);
 };
 #endif  // TENSORFLOW_LITE_DELEGATES_OPENVINO_GRAPH_BUILDER_H_

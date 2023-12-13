@@ -34,6 +34,7 @@ class OpenVINODelegate : public SimpleDelegateInterface {
     TfLiteType type = context->tensors[tensor_id].type;
     return expected_type == type;
   }
+  
   bool CheckNodeSupportByOpenVINO(const TfLiteRegistration* registration,
                                   const TfLiteNode* node,
                                   TfLiteContext* context) const {

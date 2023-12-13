@@ -159,7 +159,7 @@ cc_library(
         "@intel_openvino//:openvino",
     ],
 )
-'''
+
 cc_test(
     name = "openvino_graph_builder_test",
     srcs = ["openvino_graph_builder_test.cc"],
@@ -167,8 +167,8 @@ cc_test(
         "//conditions:default": [],
     }),
     deps = [
-        ":openvino_delegate_test_mode",
+        ":openvino_graph_builder",
+        "@com_google_googletest//:gtest_main",
         "@com_google_googletest//:gtest",
     ],
 )
-'''

@@ -22,7 +22,7 @@ class OpenVINODelegateManager {
     }
   }
 
-  TfLiteStatus createGraphfromTfLite(TfLiteContext* context,
+  TfLiteStatus  createGraphfromTfLite(TfLiteContext* context,
                                       const TfLiteDelegateParams* params);
   ov::InferRequest inferRequest;
 

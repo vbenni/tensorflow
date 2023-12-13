@@ -1,21 +1,22 @@
 #include "openvino_graph_builder.h"
 
-void OpenVINOGraphBuilder::setOutputAtOperandIndex(
+TfLiteStatus OpenVINOGraphBuilder::setNodeAtTensorIndex(
     int index, ov::Output<ov::Node> output) {
+  if (index < 0 || output.get_node_shared_ptr() == nullptr) {
+    return kTfLiteDelegateError;
+  }
+  TFLITE_LOG(INFO) << "index for set = " << index 
+                   << "\n";
   outputAtOperandIndex.insert({index, output});
+  return kTfLiteOk;
 }
 
-std::shared_ptr<ov::Node> OpenVINOGraphBuilder::getInterimNodefromTensor(
+std::shared_ptr<ov::Node> OpenVINOGraphBuilder::getOVNodefromTensorIndex(
     int index) {
+  TFLITE_LOG(INFO) << "index for get = " << index 
+                   << "\n";
   return std::shared_ptr<ov::Node>(
       outputAtOperandIndex.at(index).get_node_shared_ptr());
-}
-
-std::shared_ptr<ov::Node> OpenVINOGraphBuilder::createNodefromTensor(
-    const TfLiteTensor& tensor, int tensor_index) {
-  
-  std::shared_ptr<ov::Node> input = getInterimNodefromTensor(tensor_index);
-  return input;
 }
 
 std::shared_ptr<ov::Node> OpenVINOGraphBuilder::ApplyActivation(
@@ -44,36 +45,71 @@ TfLiteStatus OpenVINOGraphBuilder::CreateAddNode(
     const TfLiteTensor* tensors,
     const TfLiteAddParams* add_params) {  // keep ptr const
 
-  const TfLiteTensor& input1_tensor = tensors[node->inputs->data[0]];
-  if (input1_tensor.type == kTfLiteFloat32) {
-    ov::element::Type elementType = ov::element::f32;
-    if (input1_tensor.allocation_type == kTfLiteMmapRo) {
-      ov::Shape tensor_shape;
-      const void* data = (const void*)input1_tensor.data.raw_const;
-      for (int i = 0; i < input1_tensor.dims->size; i++)
-        tensor_shape.push_back(
-            static_cast<size_t>(input1_tensor.dims->data[i]));
-      std::shared_ptr<ov::Node> input1 = createConstNode(elementType, tensor_shape, data);
-    }
-  }
+  // Create OV Nodes for Constant Nodes
+  // Interim
+
+  auto addinputNode1 = getOVNodefromTensorIndex(node->inputs->data[0]);
+  auto addinputNode2 = getOVNodefromTensorIndex(node->inputs->data[1]);
+
+  auto addNode = std::make_shared<ov::opset8::Add>(
+      addinputNode1, addinputNode2, ov::op::AutoBroadcastType::NUMPY);
+  resultNode = ApplyActivation(addNode, add_params->activation);
+  setNodeAtTensorIndex(node->outputs->data[0], resultNode);
   return kTfLiteOk;
 }
-/*
-const TfLiteTensor &input2_tensor = tensors[node->inputs->data[1]];
-auto inputNode1 =
-    createNodefromTensor(input1_tensor, node->inputs->data[0]);
-if (inputNode1 == nullptr)
-  TFLITE_LOG(INFO) << "input node 1 is null\n";
-auto inputNode2 =
-    createNodefromTensor(input2_tensor, node->inputs->data[1]);
-if (inputNode2 == nullptr)
-  TFLITE_LOG(INFO) << "input Node 2 is null\n";
-auto addNode = std::make_shared<ov::opset8::Add>(
-    inputNode1, inputNode2, ov::op::AutoBroadcastType::NUMPY);
-resultNode = ApplyActivation(addNode, add_params->activation);
-setOutputAtOperandIndex(node->outputs->data[0], resultNode);
-return kTfLiteOk;
-}*/
+
+std::shared_ptr<ov::Node> OpenVINOGraphBuilder::transpose(ConversionType type,
+                                                    ov::Output<ov::Node> input) {
+    ov::AxisVector order;
+    switch (type) {
+        case NHWC_NCHW:
+            order = {0, 3, 1, 2};
+            break;
+        case NCHW_NHWC:
+            order = {0, 2, 3, 1};
+            break;
+        case IHWO_OIHW:
+            order = {3, 0, 1, 2};
+            break;
+        case OHWI_OIHW:
+            order = {0, 3, 1, 2};
+            break;
+        case NHWC_CWHN:
+            order = {3, 2, 1, 0};
+            break;
+        case CWHN_NHWC:
+            order = {3, 2, 1, 0};
+            break;
+        case NHC_NCH:
+            order = {0, 2, 1};
+            break;
+        case NCH_NHC:
+            order = {0, 1, 2};
+            break;
+        case CNH_NHC:
+            order = {1, 2, 0};
+            break;
+        case NHC_CNH:
+            order = {2, 0, 1};
+            break;
+        case BTS_TBS:
+            order = {1, 0, 2};
+            break;
+        case NHCW_NHWC:
+            order = {0, 1, 3, 2};
+            break;
+        case NC_CN:
+            order = {1, 0};
+            break;
+        default:
+            //ALOGE("Invalid transpose operation !!");
+            break;
+    }
+    const auto order_node =
+        ov::opset3::Constant::create(ov::element::i64, ov::Shape{order.size()}, order);
+    return std::make_shared<ov::opset3::Transpose>(input, order_node);
+}
+
 
 TfLiteStatus OpenVINOGraphBuilder::CreateConv2DNode(
     TfLiteContext* context, int node_index, TfLiteNode* node,
@@ -90,7 +126,7 @@ TfLiteStatus OpenVINOGraphBuilder::CreateConv2DNode(
   int padding_top, padding_bottom, padding_left, padding_right = 0;
 
   if (filter_tensor.dims->size == 4) {
-    int filter_size = filter_tensor.dims->data[1];
+    filter_size = filter_tensor.dims->data[1];
   } else {
     return kTfLiteOk;
   }
@@ -114,15 +150,17 @@ TfLiteStatus OpenVINOGraphBuilder::CreateConv2DNode(
   padding_end = {padding_bottom, padding_right};
   dilations = {(size_t)conv2dParams->dilation_height_factor,
                (size_t)conv2dParams->dilation_width_factor};
-  auto input_node = createNodefromTensor(input_tensor, node->inputs->data[0]);
-  auto filter_node = createNodefromTensor(filter_tensor, node->inputs->data[1]);
-  auto bias_node = createNodefromTensor(bias_tensor, node->inputs->data[2]);
+  auto input_node = getOVNodefromTensorIndex(node->inputs->data[0]);
+  input_node = transpose(NHWC_NCHW, input_node);
+  auto filter_node = transpose(OHWI_OIHW, getOVNodefromTensorIndex(node->inputs->data[1]));
+  auto bias_node = getOVNodefromTensorIndex(node->inputs->data[2]);
 
   auto convNode = std::make_shared<ov::opset3::Convolution>(
       input_node, filter_node, ov::Strides(strides),
       ov::CoordinateDiff(padding_begin), ov::CoordinateDiff(padding_end),
       ov::Strides(dilations), auto_pad);
-  setOutputAtOperandIndex(node->outputs->data[0], convNode);
+  std::shared_ptr<ov::Node> conv_node_output = transpose(NCHW_NHWC, convNode);
+  setNodeAtTensorIndex(node->outputs->data[0], conv_node_output);
   return kTfLiteOk;
 }
 
