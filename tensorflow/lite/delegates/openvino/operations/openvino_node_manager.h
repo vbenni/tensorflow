@@ -5,17 +5,16 @@
 
 class NodeManager {
 public:
-    NodeManager(int size) { }
+    NodeManager() {}
     std::shared_ptr<ov::Node> getInterimNodeOutput(int index) {
         auto node = outputAtOperandIndex[index];
-	return node.get_node_shared_ptr();
-    }    
+        return node.get_node_shared_ptr();
+    }
     void setOutputAtOperandIndex(int index, ov::Output<ov::Node> output) {
         outputAtOperandIndex.insert(std::pair<int, ov::Output<ov::Node>>(index, output));
     }
 
-private: 
-    //TODO: update vector list to map 
+private:
     std::map<int, ov::Output<ov::Node>> outputAtOperandIndex;
 };
-#endif //TENSORFLOW_LITE_DELEGATES_OPENVINO_NODE_MANAGER_H_
+#endif  // TENSORFLOW_LITE_DELEGATES_OPENVINO_NODE_MANAGER_H_

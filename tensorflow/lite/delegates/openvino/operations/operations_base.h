@@ -3,11 +3,11 @@
 
 #include <openvino/openvino.hpp>
 #include <openvino/opsets/opset8.hpp>
-#include "tensorflow/lite/c/common.h"
-#include "tensorflow/lite/tools/logging.h"
-#include "tensorflow/lite/c/builtin_op_data.h"
 #include "tensorflow/lite/builtin_ops.h"
+#include "tensorflow/lite/c/builtin_op_data.h"
+#include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/delegates/openvino/operations/openvino_node_manager.h"
+#include "tensorflow/lite/tools/logging.h"
 
 namespace tflite {
 namespace openvinodelegate {
@@ -16,7 +16,7 @@ class OperationBuilder {
 public:
     void UpdateNodeInfo(void* data, int size, void* builtin_data) {
         tensor_indices = (int*)data;
-	tensor_indices_size = size;
+        tensor_indices_size = size;
         SetBuiltinData(builtin_data);
     }
     void SetContext(const TfLiteContext* context) { context_ = context; }
@@ -27,20 +27,20 @@ public:
     const TfLiteContext* context_;
 
 protected:
-	//tflite runtime related info to be added in Model BUilder
+    // tflite runtime related info to be added in Model BUilder
     int operationIndex;
     void* GetBuiltinData() { return builtin_data_; }
     void* SetBuiltinData(void* builtin_data) { builtin_data_ = builtin_data; }
     std::shared_ptr<ov::Node> getInputNode(int index) {
         return nodeManager->getInterimNodeOutput(index);
-    }    
-    std::shared_ptr<ov::Node> createConstNode(ov::element::Type elementType,
-                                            ov::Shape shape, const void *data) {
+    }
+    std::shared_ptr<ov::Node> createConstNode(ov::element::Type elementType, ov::Shape shape,
+                                              const void* data) {
         return std::make_shared<ov::opset8::Constant>(elementType, shape, data);
     }
-   std::shared_ptr<ov::Node> ApplyActivation(
-        std::shared_ptr<ov::Node> input, TfLiteFusedActivation activation) {
-	//TODO: change activation type from Tflite to OV runtime 
+    std::shared_ptr<ov::Node> ApplyActivation(std::shared_ptr<ov::Node> input,
+                                              TfLiteFusedActivation activation) {
+        // TODO: change activation type from Tflite to OV runtime
         switch (activation) {
             case kTfLiteActNone:
                 return input;
@@ -66,7 +66,7 @@ protected:
         for (int i = 0; i < t.dims->size; i++) {
             dims[i] = t.dims->data[i];
         }
-	return dims;
+        return dims;
     }
 
 private:
@@ -74,7 +74,6 @@ private:
     int op_type_ = 0;
 };
 
-
 }  // namespace openvinodelegate
 }  // namespace tflite
-#endif  //TENSORFLOW_LITE_DELEGATES_OPERATIOSN_BASE_H_
+#endif  // TENSORFLOW_LITE_DELEGATES_OPERATIOSN_BASE_H_

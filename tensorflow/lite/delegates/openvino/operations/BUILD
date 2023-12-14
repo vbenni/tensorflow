@@ -8,12 +8,12 @@ package(
 cc_library(
     name = "operation_builder",
     srcs = [
-        "add.cc",
-	"conv2d.cc",
+        "src/add.cc",
+	"src/conv2d.cc",
     ],
     hdrs = [
-        "add.h",
-	"conv2d.h",
+        "include/add.h",
+	"include/conv2d.h",
 	"operations_base.h",
 	"openvino_node_manager.h",
     ],

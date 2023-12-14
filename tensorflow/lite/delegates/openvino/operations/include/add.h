@@ -7,11 +7,11 @@ namespace tflite {
 namespace openvinodelegate {
 
 class Add : public OperationBuilder {
-public: 
-    Add(int operationIndex) { }
+public:
+    Add(int operationIndex) {}
     std::shared_ptr<ov::Node> createNode() override;
 };
 
 }  // namespace openvinodelegate
 }  // namespace tflite
-#endif //TENSORFLOW_LITE_DELEGATES_OPENVINO_ADD_H_
+#endif  // TENSORFLOW_LITE_DELEGATES_OPENVINO_ADD_H_

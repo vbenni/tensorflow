@@ -23,81 +23,72 @@ limitations under the License.
 namespace tflite {
 namespace openvinodelegate {
 class OpenVINODelegate : public SimpleDelegateInterface {
- public:
-  explicit OpenVINODelegate(const TfLiteOpenVINODelegateOptions* options) {
-    options_ = *options;
-    if (options == nullptr) options_ = TfLiteOpenVINODelegateOptionsDefault();
-  }
-
-  bool CheckInputsType(int tensor_id, TfLiteContext* context,
-                       TfLiteType expected_type) const {
-    TfLiteType type = context->tensors[tensor_id].type;
-    return expected_type == type;
-  }
-  bool CheckNodeSupportByOpenVINO(const TfLiteRegistration* registration,
-                                  const TfLiteNode* node,
-                                  TfLiteContext* context) const {
-    switch (registration->builtin_code) {
-      case kTfLiteBuiltinAdd: {
-        int tensor_id1 = node->inputs->data[0];
-        int tensor_id2 = node->inputs->data[1];
-        if (CheckInputsType(tensor_id1, context, kTfLiteFloat32) &&
-            CheckInputsType(tensor_id2, context, kTfLiteFloat32))
-          return true;
-        return false;
-      }
-      case kTfLiteBuiltinConv2d: {
-        return true;
-      }
-      default:
-        return false;
+public:
+    explicit OpenVINODelegate(const TfLiteOpenVINODelegateOptions* options) {
+        options_ = *options;
+        if (options == nullptr) options_ = TfLiteOpenVINODelegateOptionsDefault();
     }
-  }
 
-  bool IsNodeSupportedByDelegate(const TfLiteRegistration* registration,
-                                 const TfLiteNode* node,
-                                 TfLiteContext* context) const override {
-    bool check = CheckNodeSupportByOpenVINO(registration, node, context);
-    return check;
-  }
+    bool CheckInputsType(int tensor_id, TfLiteContext* context, TfLiteType expected_type) const {
+        TfLiteType type = context->tensors[tensor_id].type;
+        return expected_type == type;
+    }
+    bool CheckNodeSupportByOpenVINO(const TfLiteRegistration* registration, const TfLiteNode* node,
+                                    TfLiteContext* context) const {
+        switch (registration->builtin_code) {
+            case kTfLiteBuiltinAdd: {
+                int tensor_id1 = node->inputs->data[0];
+                int tensor_id2 = node->inputs->data[1];
+                if (CheckInputsType(tensor_id1, context, kTfLiteFloat32) &&
+                    CheckInputsType(tensor_id2, context, kTfLiteFloat32))
+                    return true;
+                return false;
+            }
+            case kTfLiteBuiltinConv2d: {
+                return true;
+            }
+            default:
+                return false;
+        }
+    }
 
-  TfLiteStatus Initialize(TfLiteContext* context) override { return kTfLiteOk; }
+    bool IsNodeSupportedByDelegate(const TfLiteRegistration* registration, const TfLiteNode* node,
+                                   TfLiteContext* context) const override {
+        bool check = CheckNodeSupportByOpenVINO(registration, node, context);
+        return check;
+    }
 
-  const char* Name() const override { return "OpenVINO SimpleDelegate"; }
+    TfLiteStatus Initialize(TfLiteContext* context) override { return kTfLiteOk; }
 
-  std::unique_ptr<SimpleDelegateKernelInterface> CreateDelegateKernelInterface()
-      override {
-    return std::unique_ptr<OpenVINODelegateKernel>(
-        new tflite::openvinodelegate::OpenVINODelegateKernel());
-  }
+    const char* Name() const override { return "OpenVINO SimpleDelegate"; }
 
-  SimpleDelegateInterface::Options DelegateOptions() const override {
-    auto options = SimpleDelegateInterface::Options();
-    return options;
-  }
+    std::unique_ptr<SimpleDelegateKernelInterface> CreateDelegateKernelInterface() override {
+        return std::unique_ptr<OpenVINODelegateKernel>(
+            new tflite::openvinodelegate::OpenVINODelegateKernel());
+    }
 
- private:
-  TfLiteOpenVINODelegateOptions options_;
+    SimpleDelegateInterface::Options DelegateOptions() const override {
+        auto options = SimpleDelegateInterface::Options();
+        return options;
+    }
+
+private:
+    TfLiteOpenVINODelegateOptions options_;
 };
 }  // namespace openvinodelegate
 }  // namespace tflite
 
 TfLiteDelegate* TFL_CAPI_EXPORT
 TfLiteCreateOpenVINODelegate(const TfLiteOpenVINODelegateOptions* options) {
-  auto ovdelegate_ =
-      std::make_unique<tflite::openvinodelegate::OpenVINODelegate>(options);
-  return tflite::TfLiteDelegateFactory::CreateSimpleDelegate(
-      std::move(ovdelegate_));
+    auto ovdelegate_ = std::make_unique<tflite::openvinodelegate::OpenVINODelegate>(options);
+    return tflite::TfLiteDelegateFactory::CreateSimpleDelegate(std::move(ovdelegate_));
 }
 
-void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteDelegate* delegate) {
-  return;
-}
+void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteDelegate* delegate) { return; }
 
-TfLiteOpenVINODelegateOptions TFL_CAPI_EXPORT
-TfLiteOpenVINODelegateOptionsDefault() {
-  TfLiteOpenVINODelegateOptions result;
-  result.debug_level = 0;
-  result.plugins_path = "";
-  return result;
+TfLiteOpenVINODelegateOptions TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptionsDefault() {
+    TfLiteOpenVINODelegateOptions result;
+    result.debug_level = 0;
+    result.plugins_path = "";
+    return result;
 }
