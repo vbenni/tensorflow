@@ -33,8 +33,8 @@ namespace openvinodelegate {
 class OpenVINODelegateKernel : public SimpleDelegateKernelInterface {
  public:
   explicit OpenVINODelegateKernel()
-      : ov_delegate_manager(std::make_unique<OpenVINODelegateManager>("/home/adattatr/openvino_install/openvino/runtime/lib/intel64/plugins.xml")) {
-    std::string plugin_path = "/home/adattatr/openvino_install/openvino/runtime/lib/intel64/plugins.xml";
+      : ov_delegate_manager(std::make_unique<OpenVINODelegateManager>("/usr/local/runtime/lib/intel64/plugins.xml")) {
+    std::string plugin_path = "/usr/local/runtime/lib/intel64/plugins.xml";
   }
   TfLiteStatus Init(TfLiteContext* context,
                     const TfLiteDelegateParams* params) override;
