@@ -44,7 +44,6 @@ cc_library_with_tflite(
     copts = tflite_copts() + ["-fexceptions"],
     tflite_deps = [
         ":xnnpack_delegate_provider",
-	":openvino_delegate_provider",
         ":delegate_provider_lib",
     ],
     deps = [
@@ -52,6 +51,7 @@ cc_library_with_tflite(
         ":external_delegate_provider",
         ":hexagon_delegate_provider",
         ":nnapi_delegate_provider",
+	    #":openvino_delegate_provider",
         "//tensorflow/lite/tools/delegates/experimental/stable_delegate:delegate_provider",
     ],
     alwayslink = 1,
@@ -72,7 +72,7 @@ cc_library_with_tflite(
 cc_library(
     name = "gpu_delegate_provider",
     srcs = ["gpu_delegate_provider.cc"],
-    copts = common_copts + select({
+    copts = common_copts + ["-fexceptions"] + select({
         "//tensorflow:ios": [
             "-xobjective-c++",
         ],
@@ -130,7 +130,7 @@ cc_library(
 cc_library(
     name = "coreml_delegate_provider",
     srcs = ["coreml_delegate_provider.cc"],
-    copts = common_copts + select({
+    copts = common_copts + ["-fexceptions"] + select({
         "//tensorflow:ios": [
             "-xobjective-c++",
         ],

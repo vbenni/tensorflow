@@ -20,11 +20,13 @@ class OpenVINOGraphBuilder {
 public:
     OpenVINOGraphBuilder() { nodeManager = std::make_shared<NodeManager>(); }
 
-    void addInputParams(const TfLiteContext* context, const int index) {
-        const TfLiteTensor t = context->tensors[index];
-        std::vector<size_t> dims(t.dims->size);
-        for (int i = 0; i < t.dims->size; i++) {
-            dims[i] = t.dims->data[i];
+    void addInputParams(const TfLiteOpaqueContext* context, const int index) {
+        auto t = TfLiteOpaqueContextGetOpaqueTensor(context, index);
+        int32_t num_dims;
+        num_dims = TfLiteOpaqueTensorNumDims(t);
+        std::vector<int> dims(num_dims);
+        for (int i = 0; i < num_dims; i++) {
+            dims[i]  = TfLiteOpaqueTensorDim(t,i);
         }
         auto input = std::make_shared<ov::opset3::Parameter>(ov::element::f32,
                                                              ov::Shape(dims.begin(), dims.end()));
@@ -33,13 +35,15 @@ public:
         inputParams.push_back(input);
     }
 
-    void createConstNode(const TfLiteContext* context, const int index) {
-        const TfLiteTensor t = context->tensors[index];
-        std::vector<size_t> dims(t.dims->size);
-        for (int i = 0; i < t.dims->size; i++) {
-            dims[i] = t.dims->data[i];
+    void createConstNode(const TfLiteOpaqueContext* context, const int index) {
+        const TfLiteOpaqueTensor* t = TfLiteOpaqueContextGetOpaqueTensor(context, index);
+        int32_t num_dims;
+        num_dims = TfLiteOpaqueTensorNumDims(t);
+        std::vector<int> dims(num_dims);
+        for (int i = 0; i < num_dims; i++) {
+            dims[i]  = TfLiteOpaqueTensorDim(t,i);
         }
-        const void* data = (const void*)t.data.raw_const;
+        const void* data = TfLiteOpaqueTensorData(t);
         auto constNode = std::make_shared<ov::opset8::Constant>(
             ov::element::f32, ov::Shape(dims.begin(), dims.end()), data);
         nodeManager->setOutputAtOperandIndex(index, constNode);
@@ -55,10 +59,10 @@ public:
 
     std::vector<std::shared_ptr<ov::opset3::Parameter>> getInputParams() { return inputParams; }
 
-    TfLiteStatus createNodeFromTfLiteOp(int node_id, TfLiteRegistration* registration,
-                                        TfLiteNode* node, TfLiteContext* context);
+    TfLiteStatus createNodeFromTfLiteOp(int node_id, TfLiteRegistrationExternal* registration,
+                                        TfLiteOpaqueNode* node, TfLiteOpaqueContext* context);
     std::shared_ptr<OperationBuilder> createOpClass(int operationIndex,
-                                                    TfLiteRegistration* registration);
+                                                    TfLiteRegistrationExternal* registration);
     std::vector<std::shared_ptr<ov::opset3::Parameter>> inputParams;
     std::vector<std::shared_ptr<ov::Node>> resultNodes;
 

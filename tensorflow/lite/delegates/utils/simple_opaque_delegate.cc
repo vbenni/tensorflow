@@ -18,6 +18,7 @@ limitations under the License.
 #include <memory>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "tensorflow/lite/builtin_ops.h"
 #include "tensorflow/lite/c/c_api.h"
@@ -111,7 +112,6 @@ TfLiteStatus DelegatePrepare(TfLiteOpaqueContext* opaque_context,
 
   TfLiteRegistrationExternal* delegate_kernel_registration =
       CreateDelegateKernelRegistration(simple_opaque_delegate);
-
   // Transfers ownership of delegate_kernel_registration to the opaque_context.
   return TfLiteOpaqueContextReplaceNodeSubsetsWithDelegateKernels(
       opaque_context, delegate_kernel_registration,
