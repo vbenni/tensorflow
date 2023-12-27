@@ -4,21 +4,29 @@ namespace tflite {
 namespace openvinodelegate {
 
 TfLiteStatus OpenVINOGraphBuilder::createNodeFromTfLiteOp(int node_id,
-                                                          TfLiteRegistration* registration,
-                                                          TfLiteNode* node,
-                                                          TfLiteContext* context) {
+                                                          TfLiteRegistrationExternal* registration,
+                                                          TfLiteOpaqueNode* node,
+                                                          TfLiteOpaqueContext* context) {
     auto operationNode = createOpClass(node_id, registration);
     if (!operationNode) return kTfLiteError;
     operationNode->nodeManager = nodeManager;
     operationNode->SetContext(context);
-    operationNode->UpdateNodeInfo(node->inputs->data, node->inputs->size, node->builtin_data);
+    const int* inputs_data;
+    int inputs_size;
+    TfLiteStatus tfStatus = TfLiteOpaqueNodeInputs(node, &inputs_data, &inputs_size);
+    void* builtin_data = TfLiteOpaqueNodeGetBuiltinData(node);
+    operationNode->UpdateNodeInfo((void*)(inputs_data), inputs_size, builtin_data);
     resultNode = operationNode->createNode();
-    nodeManager->setOutputAtOperandIndex(node->outputs->data[0], resultNode);
+    const int* outputs;
+    int num_outputs;
+    tfStatus = TfLiteOpaqueNodeOutputs(node,
+                                    &outputs,&num_outputs);
+    nodeManager->setOutputAtOperandIndex(outputs[0], resultNode);
     return kTfLiteOk;
 }
 std::shared_ptr<OperationBuilder> OpenVINOGraphBuilder::createOpClass(
-    int operationIndex, TfLiteRegistration* registration) {
-    switch (registration->builtin_code) {
+    int operationIndex, TfLiteRegistrationExternal* registration) {
+    switch (TfLiteRegistrationExternalGetBuiltInCode(registration)) {
         case kTfLiteBuiltinAdd: {
             return std::make_shared<Add>(operationIndex);
         }

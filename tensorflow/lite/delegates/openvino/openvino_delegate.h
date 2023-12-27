@@ -17,6 +17,7 @@ limitations under the License.
 
 #include "openvino_delegate_kernel.h"
 #include "tensorflow/lite/c/common.h"
+#include "tensorflow/lite/delegates/utils/simple_opaque_delegate.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,10 +38,10 @@ struct TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptions {
 
 TfLiteOpenVINODelegateOptions TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptionsDefault();
 
-TfLiteDelegate *TFL_CAPI_EXPORT
+TfLiteOpaqueDelegate *TFL_CAPI_EXPORT
 TfLiteCreateOpenVINODelegate(const TfLiteOpenVINODelegateOptions *options);
 
-void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteDelegate *delegate);
+void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteOpaqueDelegate *delegate);
 
 #ifdef __cplusplus
 }

@@ -18,27 +18,36 @@ limitations under the License.
 
 #include "openvino/runtime/core.hpp"
 #include "tensorflow/lite/builtin_ops.h"
-#include "tensorflow/lite/delegates/utils/simple_delegate.h"
+#include "tensorflow/lite/c/builtin_op_data.h"
+#include "tensorflow/lite/c/c_api.h"
+#include "tensorflow/lite/c/c_api_opaque.h"
+#include "tensorflow/lite/c/c_api_types.h"
+#include "tensorflow/lite/c/common.h"
+#include "tensorflow/lite/delegates/utils/simple_opaque_delegate.h"
 
 namespace tflite {
 namespace openvinodelegate {
-class OpenVINODelegate : public SimpleDelegateInterface {
+class OpenVINODelegate : public SimpleOpaqueDelegateInterface {
 public:
     explicit OpenVINODelegate(const TfLiteOpenVINODelegateOptions* options) {
         options_ = *options;
         if (options == nullptr) options_ = TfLiteOpenVINODelegateOptionsDefault();
     }
 
-    bool CheckInputsType(int tensor_id, TfLiteContext* context, TfLiteType expected_type) const {
-        TfLiteType type = context->tensors[tensor_id].type;
+    bool CheckInputsType(int tensor_id, TfLiteOpaqueContext* context, TfLiteType expected_type) const {
+        const TfLiteOpaqueTensor* opaque_tensor = TfLiteOpaqueContextGetOpaqueTensor(context, tensor_id);
+        TfLiteType type = TfLiteOpaqueTensorType(opaque_tensor);
         return expected_type == type;
     }
-    bool CheckNodeSupportByOpenVINO(const TfLiteRegistration* registration, const TfLiteNode* node,
-                                    TfLiteContext* context) const {
-        switch (registration->builtin_code) {
+    bool CheckNodeSupportByOpenVINO(const TfLiteRegistrationExternal* registration, const TfLiteOpaqueNode* node,
+                                    TfLiteOpaqueContext* context) const {
+        switch (TfLiteRegistrationExternalGetBuiltInCode(registration)) {
             case kTfLiteBuiltinAdd: {
-                int tensor_id1 = node->inputs->data[0];
-                int tensor_id2 = node->inputs->data[1];
+                const int* inputs;
+                int num_inputs;
+                auto tfStatus = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
+                int tensor_id1 = inputs[0];
+                int tensor_id2 = inputs[1];
                 if (CheckInputsType(tensor_id1, context, kTfLiteFloat32) &&
                     CheckInputsType(tensor_id2, context, kTfLiteFloat32))
                     return true;
@@ -52,24 +61,19 @@ public:
         }
     }
 
-    bool IsNodeSupportedByDelegate(const TfLiteRegistration* registration, const TfLiteNode* node,
-                                   TfLiteContext* context) const override {
+    bool IsNodeSupportedByDelegate(const TfLiteRegistrationExternal* registration, const TfLiteOpaqueNode* node,
+                                   TfLiteOpaqueContext* context) const override {
         bool check = CheckNodeSupportByOpenVINO(registration, node, context);
         return check;
     }
 
-    TfLiteStatus Initialize(TfLiteContext* context) override { return kTfLiteOk; }
+    TfLiteStatus Initialize(TfLiteOpaqueContext* context) override { return kTfLiteOk; }
 
-    const char* Name() const override { return "OpenVINO SimpleDelegate"; }
+    const char* Name() const override { return "OpenVINO SimpleOpaqueDelegate"; }
 
-    std::unique_ptr<SimpleDelegateKernelInterface> CreateDelegateKernelInterface() override {
+    std::unique_ptr<SimpleOpaqueDelegateKernelInterface> CreateDelegateKernelInterface() override {
         return std::unique_ptr<OpenVINODelegateKernel>(
             new tflite::openvinodelegate::OpenVINODelegateKernel());
-    }
-
-    SimpleDelegateInterface::Options DelegateOptions() const override {
-        auto options = SimpleDelegateInterface::Options();
-        return options;
     }
 
 private:
@@ -81,7 +85,7 @@ private:
 TfLiteDelegate* TFL_CAPI_EXPORT
 TfLiteCreateOpenVINODelegate(const TfLiteOpenVINODelegateOptions* options) {
     auto ovdelegate_ = std::make_unique<tflite::openvinodelegate::OpenVINODelegate>(options);
-    return tflite::TfLiteDelegateFactory::CreateSimpleDelegate(std::move(ovdelegate_));
+    return tflite::TfLiteOpaqueDelegateFactory::CreateSimpleDelegate(std::move(ovdelegate_));
 }
 
 void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteDelegate* delegate) { return; }
