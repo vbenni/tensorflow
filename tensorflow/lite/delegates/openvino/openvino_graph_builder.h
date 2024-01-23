@@ -10,6 +10,7 @@
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/add.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/conv2d.h"
+#include "tensorflow/lite/delegates/openvino/operations/include/concat.h"
 #include "tensorflow/lite/delegates/openvino/operations/openvino_node_manager.h"
 #include "tensorflow/lite/tools/logging.h"
 

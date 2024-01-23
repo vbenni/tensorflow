@@ -33,6 +33,9 @@ std::shared_ptr<OperationBuilder> OpenVINOGraphBuilder::createOpClass(
         case kTfLiteBuiltinConv2d: {
             return std::make_shared<Conv2D>(operationIndex);
         }
+         case kTfLiteBuiltinConcatenation: {
+            return std::make_shared<Concat>(operationIndex);
+        }
         default:
             return nullptr;
     }

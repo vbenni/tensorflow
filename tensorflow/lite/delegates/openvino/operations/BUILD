@@ -9,13 +9,15 @@ cc_library(
     name = "operation_builder",
     srcs = [
         "src/add.cc",
-	    "src/conv2d.cc",
+        "src/conv2d.cc",
+        "src/concat.cc",
     ],
     hdrs = [
         "include/add.h",
-	    "include/conv2d.h",
-	    "operations_base.h",
-	    "openvino_node_manager.h",
+        "include/conv2d.h",
+        "include/concat.h",
+        "operations_base.h",
+        "openvino_node_manager.h",
     ],
     tags = [
         "manual",
